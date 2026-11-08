@@ -1,0 +1,211 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<title>Guida TV Palestra</title>
+<style>
+  @page { size: A4; margin: 16mm 16mm 18mm; }
+  :root {
+    --ink: #111;
+    --muted: #5a564c;
+    --gold: #EAB92A;
+    --gold-deep: #9A7612;
+    --pale: #FBF4DA;
+    --line: #E6DFC8;
+    --danger: #B3261E;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; color: var(--ink); background: #fff; font: 11pt/1.5 -apple-system, "Helvetica Neue", Arial, sans-serif; }
+  h1, h2, h3 { font-weight: 900; text-transform: uppercase; letter-spacing: .02em; margin: 0; }
+  h2 { font-size: 17pt; margin: 0 0 4mm; padding-bottom: 2mm; border-bottom: 3px solid var(--gold); break-after: avoid; }
+  h3 { font-size: 11pt; color: var(--gold-deep); margin: 5mm 0 2mm; break-after: avoid; }
+  p { margin: 0 0 3mm; }
+  section { margin-bottom: 9mm; }
+  .page-break { break-before: page; }
+
+  .cover { height: 255mm; display: flex; flex-direction: column; justify-content: center; align-items: flex-start; gap: 8mm; }
+  .cover img { width: 62mm; height: 62mm; border-radius: 8mm; }
+  .cover .kicker { font-weight: 900; text-transform: uppercase; color: var(--gold-deep); letter-spacing: .12em; font-size: 11pt; }
+  .cover h1 { font-size: 40pt; line-height: 1; }
+  .cover .lead { font-size: 13pt; max-width: 140mm; color: var(--muted); }
+  .cover .toc { margin-top: 6mm; padding: 0; list-style: none; display: grid; gap: 2mm; font-weight: 700; }
+  .cover .toc span { display: inline-block; width: 9mm; color: var(--gold-deep); }
+
+  ol.steps { list-style: none; padding: 0; margin: 0 0 3mm; counter-reset: s; }
+  ol.steps > li { counter-increment: s; position: relative; padding: 0 0 2.5mm 11mm; break-inside: avoid; }
+  ol.steps > li::before { content: counter(s); position: absolute; left: 0; top: 0; width: 7mm; height: 7mm; border-radius: 50%; background: var(--gold); color: #000; font-weight: 900; font-size: 10pt; display: grid; place-items: center; }
+  ul { margin: 0 0 3mm; padding-left: 5mm; }
+  ul li { margin-bottom: 1mm; }
+  ul li::marker { color: var(--gold-deep); }
+
+  .path { font-weight: 700; }
+  .value { font-family: "SF Mono", Menlo, monospace; font-size: 10pt; background: var(--pale); border: 1px solid var(--line); border-radius: 1.5mm; padding: 0 1.5mm; white-space: nowrap; }
+
+  .box { border: 2px solid var(--gold); background: var(--pale); border-radius: 3mm; padding: 4mm 5mm; margin: 0 0 4mm; break-inside: avoid; }
+  .box.warn { border-color: var(--danger); background: #FDECEA; }
+  .box b.t { display: block; text-transform: uppercase; font-weight: 900; margin-bottom: 1mm; }
+
+  table { width: 100%; border-collapse: collapse; margin: 0 0 4mm; font-size: 10.5pt; }
+  tr { break-inside: avoid; }
+  th, td { text-align: left; vertical-align: top; padding: 2mm 3mm; border-bottom: 1px solid var(--line); }
+  th { background: var(--ink); color: #fff; text-transform: uppercase; font-size: 9pt; letter-spacing: .04em; }
+  td:first-child { font-weight: 700; width: 38%; }
+
+  .foot { margin-top: 8mm; color: var(--muted); font-size: 9pt; }
+
+  .shot { display: block; width: 100%; max-width: 105mm; margin-top: 2mm; border-radius: 2mm; border: 1px solid var(--line); }
+  .shot.bar { max-width: none; }
+  .tv-note { margin: 1mm 0 0; color: var(--muted); font-size: 9.5pt; }
+  .banner-tv { background: #111; border-radius: 2mm; padding: 5mm; margin-top: 3mm; text-align: center; }
+  .banner-pill { display: inline-block; background: var(--gold); color: #000; font-weight: 800; font-size: 10.5pt; letter-spacing: .04em; padding: 2.5mm 6mm; border-radius: 99mm; }
+  .banner-pill small { display: block; font-size: 8pt; font-weight: 700; }
+  .phones { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4mm; width: 150mm; margin: 0 auto 5mm; break-inside: avoid; }
+  .phones figure { margin: 0; }
+  .phones img { display: block; width: 100%; border-radius: 3mm; }
+  .phones figcaption { margin-top: 1.5mm; font-size: 9.5pt; font-weight: 700; text-align: center; }
+</style>
+</head>
+<body>
+
+<div class="cover">
+  <img src="../monitor-app/app/src/main/assets/web/logo.jpg" alt="Keep Gold">
+  <div class="kicker">Keep Gold · Fitness &amp; Wellness</div>
+  <h1>Guida<br>TV Palestra</h1>
+  <p class="lead">Come installare la TV dei video in palestra, collegarla al telefono e tenerla in funzione. Si legge in dieci minuti, si fa una volta sola.</p>
+  <ul class="toc">
+    <li><span>1</span>Installare la Fire TV</li>
+    <li><span>2</span>Collegarla alla wifi palestra</li>
+    <li><span>3</span>Mettere l'app sul telefono</li>
+    <li><span>4</span>Uso di tutti i giorni</li>
+    <li><span>5</span>Abitudini che evitano problemi</li>
+    <li><span>6</span>Se qualcosa non va</li>
+  </ul>
+</div>
+
+<section class="page-break">
+  <h2>1 · Installare la Fire TV</h2>
+  <p>La Fire TV è la chiavetta attaccata alla TV. All'accensione apre da sola i video, anche senza internet, e riparte da sola dopo un blackout.</p>
+  <ol class="steps">
+    <li><b>Collega l'alimentatore originale a una presa di corrente.</b> Non usare la porta USB della TV o del LED wall: dà poca corrente e la chiavetta si riavvia a caso.</li>
+    <li><b>Usa la prolunga HDMI corta</b> che c'era nella scatola, così la chiavetta pende fuori e prende aria.</li>
+    <li><b>Non chiuderla dietro lo schermo o in un vano.</b> Scalda parecchio: al chiuso rallenta e può spegnersi.</li>
+    <li>Accendi la TV sull'ingresso HDMI giusto. Dopo un paio di minuti partono i video.</li>
+  </ol>
+  <div class="box">
+    <b class="t">Prova del blackout</b>
+    Il primo giorno stacca la corrente a TV e chiavetta mentre vanno i video, aspetta 10 secondi e riattaccala. Entro un paio di minuti i video devono ripartire da soli, senza toccare niente.
+  </div>
+
+</section>
+
+<section class="page-break">
+  <h2>2 · Collegare la TV alla wifi palestra</h2>
+  <p>Serve solo la prima volta, o se la wifi cambia nome o password. Prendi il telecomando.</p>
+  <ol class="steps">
+    <li>Premi il tasto con la <b>casetta</b>.</li>
+    <li>Con la freccia destra vai fino in fondo alla riga, sull'<b>ingranaggio</b>.
+      <img class="shot bar" src="img/tv-gear.png" alt="La riga in alto della Fire TV, con l'ingranaggio cerchiato in fondo a destra"></li>
+    <li>Premi la freccia giù, spostati su <b>Rete</b> e premi il tasto centrale.
+      <img class="shot" src="img/tv-rete.png" alt="Il menu delle impostazioni con la voce Rete selezionata"></li>
+    <li>Scegli la <b>wifi palestra</b> e scrivi la password. Se non la vedi, scegli <b>Vedi tutte le reti</b>.
+      <img class="shot" src="img/tv-wifi.png" alt="L'elenco delle reti con Wifi palestra collegata">
+      <p class="tv-note">Quando è collegata, sotto il nome c'è scritto Connesso.</p></li>
+    <li>Premi di nuovo la casetta. Dopo qualche minuto i video tornano da soli.</li>
+  </ol>
+  <div class="box">
+    <b class="t">Come capisci che è collegata</b>
+    Sulla TV compare per qualche secondo una scritta gialla: <b>COLLEGATO</b>. Sotto, in piccolo, c'è l'indirizzo della TV: ti serve nella parte 3.
+    <div class="banner-tv"><div class="banner-pill">COLLEGATO &nbsp;·&nbsp; APRI L'APP O IL SITO DELLA TV<small>indirizzo: 192.168.1.50:8000</small></div></div>
+    <p class="tv-note">Disegno di esempio: l'indirizzo sulla tua TV avrà numeri diversi.</p>
+  </div>
+</section>
+
+<section>
+  <h2>3 · Mettere l'app sul telefono</h2>
+  <p>Da qui gestisci tutto quello che va sulla TV. Una volta salvata, la trovi tra le altre app del telefono.</p>
+  <ol class="steps">
+    <li>Collega il telefono alla wifi palestra.</li>
+    <li>Apri <b>Safari</b> e scrivi l'indirizzo che hai visto sulla TV, sotto la scritta COLLEGATO.</li>
+    <li>Tocca il tasto Condividi (il quadrato con la freccia) e poi <b>Aggiungi alla schermata Home</b>.</li>
+    <li>Da ora in poi apri l'icona <b>TV Palestra</b>. In alto c'è un tasto <b>?</b> con le istruzioni in breve.</li>
+  </ol>
+  <div class="box">
+    <b class="t">Dal computer</b>
+    Collega il computer alla wifi palestra e scrivi lo stesso indirizzo nel browser.
+  </div>
+</section>
+
+<section>
+  <h2>4 · Uso di tutti i giorni</h2>
+  <div class="phones">
+    <figure><img src="img/p-main.png" alt="La schermata principale dell'app"><figcaption>La schermata principale</figcaption></figure>
+    <figure><img src="img/p-names.png" alt="La finestra per dare un nome al contenuto"><figcaption>Dai un nome e invia</figcaption></figure>
+    <figure><img src="img/p-item.png" alt="La scheda di un singolo contenuto"><figcaption>La scheda di un contenuto</figcaption></figure>
+  </div>
+  <h3>Caricare video e foto</h3>
+  <ol class="steps">
+    <li>Collega il telefono alla wifi palestra e apri TV Palestra.</li>
+    <li>Tocca <b>Carica video o foto</b> e scegli dalla galleria.</li>
+    <li>Dai a ogni contenuto un nome che si capisca tra un mese, per esempio "Promo corsi gennaio". Due contenuti non possono avere lo stesso nome.</li>
+    <li>Tocca <b>Invia alla TV</b>.</li>
+  </ol>
+  <div class="box warn">
+    <b class="t">Mentre carichi</b>
+    Tieni lo schermo del telefono acceso e la pagina aperta. I video vengono sistemati per la TV direttamente sul telefono e ci vuole il tempo che dura il video: un video di 2 minuti richiede circa 2 minuti, più l'invio.
+  </div>
+
+  <h3>Gestire quello che va in onda</h3>
+  <table>
+    <tr><th>Vuoi…</th><th>Fai così</th></tr>
+    <tr><td>Cambiare l'ordine</td><td>Trascina un contenuto tenendo premute le sei righe a sinistra.</td></tr>
+    <tr><td>Toglierlo per un po'</td><td>Spegni l'interruttore. Resta salvato ma non va in onda.</td></tr>
+    <tr><td>Rinominarlo, rivederlo, scaricarlo, eliminarlo</td><td>Tocca il contenuto: si apre la sua scheda.</td></tr>
+    <tr><td>Ripartire dal primo</td><td>Impostazioni › <b>Riavvia dall'inizio</b>.</td></tr>
+    <tr><td>Durata delle foto</td><td>Impostazioni › Durata di ogni foto. Le foto hanno sempre zoom lento e dissolvenza.</td></tr>
+    <tr><td>Ripartire dopo un blackout</td><td>Lascia acceso <b>Riparti da solo quando torna la corrente</b>.</td></tr>
+  </table>
+  <p>Finito? Chiudi la pagina: la TV va avanti da sola. Lo spazio libero è indicato in alto nella pagina.</p>
+</section>
+
+<section>
+  <h2>5 · Abitudini che evitano problemi</h2>
+  <ul>
+    <li><b>Telecomando nel cassetto.</b> Se qualcuno preme Home la TV mostra la schermata Amazon e torna ai video da sola dopo i minuti scelti in <span class="path">Torna ai video dopo</span>. Consigliati 10 minuti.</li>
+    <li><b>Spegnimento notturno.</b> Una presa smart programmata che stacca TV e chiavetta alle 4:00 per un minuto e poi riattacca. Ogni giorno si riparte puliti.</li>
+    <li><b>Aria intorno alla chiavetta.</b> Niente vani chiusi, niente retro del LED wall. Se lo spazio è caldo, un piccolo dissipatore adesivo aiuta.</li>
+    <li><b>Video sempre dall'app.</b> Caricali da TV Palestra, che li prepara per la TV.</li>
+    <li><b>Se la wifi salta non succede niente.</b> I video continuano ad andare: la wifi serve solo per caricarne di nuovi.</li>
+  </ul>
+</section>
+
+<section class="page-break">
+  <h2>6 · Se qualcosa non va</h2>
+  <table>
+    <tr><th>Succede che…</th><th>Prova così</th></tr>
+    <tr><td>Il telefono dice "TV non raggiungibile"</td><td>Controlla che la TV sia accesa e che il telefono sia sulla wifi palestra, aspetta un minuto e ricarica la pagina. Con Chrome: Impostazioni dell'iPhone, poi Chrome, e attiva Rete locale.</td></tr>
+    <tr><td>Sulla TV non compare COLLEGATO</td><td>La TV non è sulla wifi. Rifai la parte 2 e controlla che nome e password siano quelli giusti.</td></tr>
+    <tr><td>Sulla TV c'è la schermata Amazon</td><td>Lasciala stare: torna da sola. Per farlo subito tocca Riavvia dall'inizio dalla pagina.</td></tr>
+    <tr><td>Sulla TV c'è scritto NESSUN CONTENUTO</td><td>Non c'è niente di acceso: carica qualcosa o riaccendi un interruttore.</td></tr>
+    <tr><td>Sulla TV c'è scritto FILE NON LEGGIBILI</td><td>Elimina i contenuti più recenti e ricaricali dalla pagina.</td></tr>
+    <tr><td>Un caricamento si ferma</td><td>Lo schermo del telefono si è spento o la pagina è stata chiusa. Ricaricalo tenendo lo schermo acceso.</td></tr>
+    <tr><td>"Spazio insufficiente"</td><td>Elimina i contenuti vecchi che non usi più.</td></tr>
+    <tr><td>La TV si riavvia da sola o i video scattano</td><td>Quasi sempre è caldo o alimentazione: alimentatore originale alla presa e chiavetta all'aria.</td></tr>
+    <tr><td>La TV cambia ingresso o la chiavetta si spegne con la TV</td><td>Impostazioni › Suoni e schermo › Controllo dispositivo HDMI CEC › Disattivato.</td></tr>
+    <tr><td>Dopo un Forza arresto nelle impostazioni l'app non riparte</td><td>Aprila una volta a mano dalle app: da lì torna a ripartire da sola.</td></tr>
+  </table>
+</section>
+
+<section class="page-break">
+  <h2>Solo per chi installa</h2>
+  <p>Da fare una volta. Chi usa la TV tutti i giorni può saltare questa pagina.</p>
+    <table>
+    <tr><th>Dove</th><th>Cosa scegliere</th></tr>
+    <tr><td>Impostazioni › Suoni e schermo › Salvaschermo</td><td>Avvio: Mai</td></tr>
+    <tr><td>Impostazioni › Suoni e schermo › Schermo › Risoluzione video</td><td>1080p 60 Hz (se l'immagine è tagliata ai bordi, usa Regola schermo nello stesso menu)</td></tr>
+    <tr><td>Impostazioni › La mia Fire TV › Opzioni sviluppatore › Debug ADB</td><td>Disattivato a lavoro finito. Serve solo al tecnico per gli aggiornamenti dell'app.</td></tr>
+    <tr><td>Router della palestra › Riserva indirizzo IP (DHCP)</td><td>Riserva un indirizzo fisso per la Fire TV, così l'icona sul telefono continua a funzionare. Il nome della voce cambia da router a router.</td></tr>
+  </table>
+</section>
+
+</body>
+</html>

@@ -1,0 +1,32 @@
+plugins {
+    id "com.android.application"
+}
+
+android {
+    namespace "it.keepgold.monitor"
+    compileSdk 35
+
+    defaultConfig {
+        applicationId "it.keepgold.monitor"
+        minSdk 21
+        // Fire OS 5 is Android 5.1: no runtime permissions or background limits to deal with.
+        targetSdk 22
+        versionCode 1
+        versionName "1.0"
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+
+    lint {
+        abortOnError false
+        checkReleaseBuilds false
+    }
+}
+
+dependencies {
+    implementation "androidx.media3:media3-exoplayer:1.5.1"
+    implementation "org.nanohttpd:nanohttpd:2.3.1"
+}

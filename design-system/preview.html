@@ -1,0 +1,254 @@
+<!doctype html>
+<html lang="it"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Monitor Palestra">
+<title>Monitor Palestra</title>
+<style>
+/* Monitor Palestra - Keep Gold. Dark-only: the brand is gold on black. */
+:root {
+  color-scheme: dark;
+
+  /* color */
+  --kg-black: #0B0B0B;      /* page ground (chalkboard black) */
+  --kg-surface: #161513;    /* cards, rows */
+  --kg-surface-2: #211F1B;  /* raised: inputs, thumbs */
+  --kg-line: #3A372F;       /* borders, off-toggle track */
+  --kg-gold: #EAB92A;       /* primary (laurel leaves, banner) */
+  --kg-gold-deep: #C49A2A;  /* pressed state (star shade) */
+  --kg-gold-pale: #F0E08F;  /* highlights, focus ring (banner outline) */
+  --kg-white: #FFFFFF;      /* main text (sticker outline) */
+  --kg-text-muted: #B0ACA0; /* secondary text, 8:1 on surface */
+  --kg-on-gold: #0B0B0B;    /* text on gold, 10:1 */
+  --kg-ok: #5FD38D;
+  --kg-danger: #FF7A6B;     /* 6.7:1 on surface */
+  --kg-danger-bg: #3A1511;
+
+  /* type: system stack only, offline */
+  --font: -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-display: -apple-system, BlinkMacSystemFont, "SF Pro Display", system-ui, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --fs-xs: 0.8125rem;   /* 13 */
+  --fs-sm: 0.9375rem;   /* 15 */
+  --fs-md: 1.0625rem;   /* 17 body */
+  --fs-lg: 1.25rem;     /* 20 */
+  --fs-xl: 1.75rem;     /* 28 */
+  --fw-regular: 500;
+  --fw-bold: 700;
+  --fw-black: 900;
+  --track-caps: 0.06em;
+
+  /* space (4px grid) */
+  --sp-1: 4px; --sp-2: 8px; --sp-3: 12px; --sp-4: 16px; --sp-5: 24px; --sp-6: 32px;
+  --touch: 48px; /* min touch target (Apple asks 44) */
+
+  /* shape: sticker-like, chunky */
+  --radius-sm: 10px; --radius: 16px; --radius-pill: 999px;
+  --border: 1.5px solid var(--kg-line);
+
+  /* shadow */
+  --shadow-1: 0 1px 0 rgba(255,255,255,.04) inset, 0 2px 8px rgba(0,0,0,.5);
+  --shadow-2: 0 12px 32px rgba(0,0,0,.7);
+
+  /* motion */
+  --ease: cubic-bezier(.2,.8,.2,1);
+  --dur: 160ms;
+}
+
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  margin: 0; background: var(--kg-black); color: var(--kg-white);
+  font: var(--fw-regular) var(--fs-md)/1.4 var(--font);
+  -webkit-tap-highlight-color: transparent;
+}
+button, input { font: inherit; color: inherit; }
+:focus-visible { outline: 3px solid var(--kg-gold-pale); outline-offset: 2px; }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
+
+/* layout */
+.app { max-width: 480px; margin: 0 auto; padding: var(--sp-4) max(16px, env(safe-area-inset-left, 0px)) var(--sp-6) max(16px, env(safe-area-inset-right, 0px)); display: flex; flex-direction: column; gap: var(--sp-5); }
+.section-title { margin: 0; font: var(--fw-black) var(--fs-sm)/1.2 var(--font-display); text-transform: uppercase; letter-spacing: var(--track-caps); color: var(--kg-gold); }
+.stack { display: flex; flex-direction: column; gap: var(--sp-3); }
+
+/* header + storage meter */
+.header { display: flex; flex-direction: column; gap: var(--sp-3); }
+.title { margin: 0; font: var(--fw-black) var(--fs-xl)/1.05 var(--font-display); text-transform: uppercase; letter-spacing: .01em; }
+.title small { display: block; font-size: var(--fs-xs); font-weight: var(--fw-bold); letter-spacing: var(--track-caps); color: var(--kg-gold); }
+.meter { display: flex; flex-direction: column; gap: var(--sp-2); }
+.meter-label { font-size: var(--fs-sm); color: var(--kg-text-muted); font-variant-numeric: tabular-nums; }
+.meter-label b { color: var(--kg-white); font-weight: var(--fw-bold); }
+.meter-bar { height: 12px; border-radius: var(--radius-pill); background: var(--kg-surface-2); border: var(--border); overflow: hidden; }
+.meter-fill { height: 100%; width: var(--used, 50%); background: var(--kg-gold); border-radius: inherit; }
+.meter.is-low .meter-fill { background: var(--kg-danger); }
+.meter.is-low .meter-label b { color: var(--kg-danger); }
+
+/* buttons */
+.btn { min-height: var(--touch); padding: 0 var(--sp-5); border: 0; border-radius: var(--radius); display: inline-flex; align-items: center; justify-content: center; gap: var(--sp-2); font-weight: var(--fw-bold); font-size: var(--fs-md); cursor: pointer; transition: transform var(--dur) var(--ease), background var(--dur); }
+.btn:active { transform: scale(.98); }
+.btn-primary { background: var(--kg-gold); color: var(--kg-on-gold); min-height: 56px; font-weight: var(--fw-black); text-transform: uppercase; letter-spacing: .03em; box-shadow: var(--shadow-1); width: 100%; }
+.btn-primary:active { background: var(--kg-gold-deep); }
+.btn-secondary { background: transparent; color: var(--kg-white); border: 2px solid var(--kg-gold); width: 100%; }
+.btn-secondary:active { background: var(--kg-surface-2); }
+.btn-danger { background: var(--kg-danger); color: var(--kg-on-gold); font-weight: var(--fw-black); }
+.btn-quiet { background: var(--kg-surface-2); color: var(--kg-white); }
+.btn[disabled] { opacity: .5; pointer-events: none; }
+
+/* upload progress */
+.upload { background: var(--kg-surface); border: var(--border); border-radius: var(--radius); padding: var(--sp-3) var(--sp-4); display: flex; flex-direction: column; gap: var(--sp-2); }
+.upload-head { display: flex; justify-content: space-between; gap: var(--sp-3); font-size: var(--fs-sm); font-variant-numeric: tabular-nums; }
+.upload-name { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.upload-bar { height: 10px; border-radius: var(--radius-pill); background: var(--kg-surface-2); overflow: hidden; }
+.upload-fill { height: 100%; width: var(--pct, 0%); background: var(--kg-gold); transition: width var(--dur) linear; }
+
+/* media list */
+.media-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: var(--sp-3); }
+.media-item { display: flex; align-items: center; gap: var(--sp-3); background: var(--kg-surface); border: var(--border); border-radius: var(--radius); padding: var(--sp-2) var(--sp-2) var(--sp-2) 0; box-shadow: var(--shadow-1); }
+.media-item.is-off .thumb, .media-item.is-off .media-name { opacity: .5; }
+.media-item.is-dragging { border-color: var(--kg-gold); box-shadow: var(--shadow-2); transform: scale(1.02); }
+.handle { flex: none; width: var(--touch); height: var(--touch); display: grid; place-items: center; color: var(--kg-text-muted); background: none; border: 0; cursor: grab; touch-action: none; }
+.handle svg { width: 22px; height: 22px; fill: currentColor; }
+.thumb { flex: none; width: 64px; height: 48px; border-radius: var(--radius-sm); background: var(--kg-surface-2) linear-gradient(135deg, var(--kg-surface-2), var(--kg-line)); display: grid; place-items: center; color: var(--kg-gold); font-size: var(--fs-xs); font-weight: var(--fw-black); }
+.media-body { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.media-name { font-weight: var(--fw-bold); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.media-meta { font-size: var(--fs-xs); color: var(--kg-text-muted); font-variant-numeric: tabular-nums; }
+.media-actions { flex: none; display: flex; align-items: center; gap: var(--sp-1); }
+.icon-btn { width: var(--touch); height: var(--touch); display: grid; place-items: center; border: 0; background: none; color: var(--kg-text-muted); border-radius: var(--radius-sm); cursor: pointer; }
+.icon-btn svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.icon-btn.is-danger { color: var(--kg-danger); }
+
+/* switch: <label class="switch"><input type="checkbox" role="switch"><span class="track"></span></label> */
+.switch { position: relative; flex: none; width: 60px; height: var(--touch); display: inline-grid; place-items: center; cursor: pointer; }
+.switch input { position: absolute; inset: 0; opacity: 0; margin: 0; cursor: pointer; }
+.switch .track { width: 52px; height: 32px; border-radius: var(--radius-pill); background: var(--kg-line); position: relative; transition: background var(--dur); }
+.switch .track::after { content: ""; position: absolute; top: 4px; left: 4px; width: 24px; height: 24px; border-radius: 50%; background: var(--kg-white); transition: transform var(--dur) var(--ease); }
+.switch input:checked + .track { background: var(--kg-gold); }
+.switch input:checked + .track::after { transform: translateX(20px); background: var(--kg-on-gold); }
+.switch input:focus-visible + .track { outline: 3px solid var(--kg-gold-pale); outline-offset: 2px; }
+
+/* settings rows */
+.settings { background: var(--kg-surface); border: var(--border); border-radius: var(--radius); overflow: hidden; }
+.row { display: flex; align-items: center; justify-content: space-between; gap: var(--sp-3); min-height: 64px; padding: var(--sp-2) var(--sp-2) var(--sp-2) var(--sp-4); }
+.row + .row { border-top: var(--border); }
+.row-text { min-width: 0; font-weight: var(--fw-bold); }
+.row-hint { display: block; font-size: var(--fs-xs); font-weight: var(--fw-regular); color: var(--kg-text-muted); }
+
+/* stepper */
+.stepper { flex: none; display: inline-flex; align-items: center; background: var(--kg-surface-2); border-radius: var(--radius); }
+.stepper button { width: var(--touch); height: var(--touch); border: 0; background: none; color: var(--kg-gold); font-size: 1.5rem; font-weight: var(--fw-black); cursor: pointer; border-radius: var(--radius); }
+.stepper button:active { background: var(--kg-line); }
+.stepper output { min-width: 36px; text-align: center; font-weight: var(--fw-black); font-variant-numeric: tabular-nums; }
+
+/* empty state */
+.empty { text-align: center; padding: var(--sp-6) var(--sp-4); border: 2px dashed var(--kg-line); border-radius: var(--radius); display: flex; flex-direction: column; align-items: center; gap: var(--sp-2); }
+.empty svg { width: 44px; height: 44px; fill: var(--kg-gold); }
+.empty h3 { margin: 0; font: var(--fw-black) var(--fs-lg)/1.2 var(--font-display); text-transform: uppercase; }
+.empty p { margin: 0; color: var(--kg-text-muted); font-size: var(--fs-sm); }
+
+/* toast: place in a fixed container at the bottom of the page */
+.toast-zone { position: fixed; left: 0; right: 0; bottom: 0; padding: var(--sp-4) max(16px, env(safe-area-inset-left, 0px)) calc(var(--sp-4) + env(safe-area-inset-bottom, 0px)); display: flex; flex-direction: column; gap: var(--sp-2); align-items: center; pointer-events: none; z-index: 20; }
+.toast { pointer-events: auto; width: 100%; max-width: 448px; display: flex; align-items: center; gap: var(--sp-3); min-height: var(--touch); padding: var(--sp-3) var(--sp-4); border-radius: var(--radius); background: var(--kg-surface-2); border: 2px solid var(--kg-ok); box-shadow: var(--shadow-2); font-weight: var(--fw-bold); }
+.toast-ok::before { content: "\2713"; color: var(--kg-ok); font-weight: var(--fw-black); }
+.toast-error { border-color: var(--kg-danger); }
+.toast-error::before { content: "!"; color: var(--kg-danger); font-weight: var(--fw-black); }
+
+/* confirm dialog */
+.scrim { position: fixed; inset: 0; background: rgba(0,0,0,.75); display: grid; place-items: end center; padding: var(--sp-4) max(16px, env(safe-area-inset-left, 0px)) calc(var(--sp-4) + env(safe-area-inset-bottom, 0px)); z-index: 30; }
+.dialog { width: 100%; max-width: 448px; background: var(--kg-surface); border: 2px solid var(--kg-gold); border-radius: 20px; padding: var(--sp-5); box-shadow: var(--shadow-2); display: flex; flex-direction: column; gap: var(--sp-3); }
+.dialog h2 { margin: 0; font: var(--fw-black) var(--fs-lg)/1.2 var(--font-display); text-transform: uppercase; }
+.dialog p { margin: 0; color: var(--kg-text-muted); }
+.dialog-actions { display: flex; flex-direction: column-reverse; gap: var(--sp-2); margin-top: var(--sp-2); }
+.dialog-actions .btn { width: 100%; }
+</style></head>
+<body>
+<main class="app">
+  <header class="header">
+    <h1 class="title"><small>Keep Gold</small>Monitor Palestra</h1>
+    <div class="meter" style="--used:62%">
+      <div class="meter-label"><b>3,8 GB liberi</b> su 10 GB</div>
+      <div class="meter-bar" role="progressbar" aria-label="Spazio usato" aria-valuenow="62" aria-valuemin="0" aria-valuemax="100"><div class="meter-fill"></div></div>
+    </div>
+  </header>
+
+  <section class="stack">
+    <button class="btn btn-primary" type="button">Carica video o foto</button>
+    <div class="upload">
+      <div class="upload-head"><span class="upload-name">Promo-autunno.mp4</span><span>40%</span></div>
+      <div class="upload-bar" role="progressbar" aria-valuenow="40" aria-valuemin="0" aria-valuemax="100"><div class="upload-fill" style="--pct:40%"></div></div>
+    </div>
+  </section>
+
+  <section class="stack">
+    <h2 class="section-title">Cosa va sul monitor</h2>
+    <ul class="media-list">
+      <li class="media-item">
+        <button class="handle" type="button" aria-label="Trascina per cambiare ordine"><svg viewBox="0 0 24 24"><circle cx="9" cy="6" r="1.8"/><circle cx="15" cy="6" r="1.8"/><circle cx="9" cy="12" r="1.8"/><circle cx="15" cy="12" r="1.8"/><circle cx="9" cy="18" r="1.8"/><circle cx="15" cy="18" r="1.8"/></svg></button>
+        <div class="thumb">VIDEO</div>
+        <div class="media-body"><span class="media-name">Benvenuti in sala pesi</span><span class="media-meta">248 MB</span></div>
+        <div class="media-actions">
+          <label class="switch"><input type="checkbox" role="switch" checked aria-label="In riproduzione: Benvenuti in sala pesi"><span class="track"></span></label>
+          <button class="icon-btn is-danger" type="button" aria-label="Elimina Benvenuti in sala pesi"><svg viewBox="0 0 24 24"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/></svg></button>
+        </div>
+      </li>
+      <li class="media-item">
+        <button class="handle" type="button" aria-label="Trascina per cambiare ordine"><svg viewBox="0 0 24 24"><circle cx="9" cy="6" r="1.8"/><circle cx="15" cy="6" r="1.8"/><circle cx="9" cy="12" r="1.8"/><circle cx="15" cy="12" r="1.8"/><circle cx="9" cy="18" r="1.8"/><circle cx="15" cy="18" r="1.8"/></svg></button>
+        <div class="thumb">FOTO</div>
+        <div class="media-body"><span class="media-name">Orari corsi settembre</span><span class="media-meta">3,2 MB</span></div>
+        <div class="media-actions">
+          <label class="switch"><input type="checkbox" role="switch" checked aria-label="In riproduzione: Orari corsi settembre"><span class="track"></span></label>
+          <button class="icon-btn is-danger" type="button" aria-label="Elimina Orari corsi settembre"><svg viewBox="0 0 24 24"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/></svg></button>
+        </div>
+      </li>
+      <li class="media-item is-off">
+        <button class="handle" type="button" aria-label="Trascina per cambiare ordine"><svg viewBox="0 0 24 24"><circle cx="9" cy="6" r="1.8"/><circle cx="15" cy="6" r="1.8"/><circle cx="9" cy="12" r="1.8"/><circle cx="15" cy="12" r="1.8"/><circle cx="9" cy="18" r="1.8"/><circle cx="15" cy="18" r="1.8"/></svg></button>
+        <div class="thumb">VIDEO</div>
+        <div class="media-body"><span class="media-name">Offerta estate 2025 (vecchia)</span><span class="media-meta">Spento, non viene mostrato · 412 MB</span></div>
+        <div class="media-actions">
+          <label class="switch"><input type="checkbox" role="switch" aria-label="In riproduzione: Offerta estate 2025"><span class="track"></span></label>
+          <button class="icon-btn is-danger" type="button" aria-label="Elimina Offerta estate 2025"><svg viewBox="0 0 24 24"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/></svg></button>
+        </div>
+      </li>
+    </ul>
+  </section>
+
+  <section class="stack">
+    <h2 class="section-title">Impostazioni</h2>
+    <div class="settings">
+      <div class="row">
+        <span class="row-text">Riparti da solo quando torna la corrente</span>
+        <label class="switch"><input type="checkbox" role="switch" checked aria-label="Riparti da solo quando torna la corrente"><span class="track"></span></label>
+      </div>
+      <div class="row">
+        <span class="row-text">Torna ai video dopo<span class="row-hint">minuti senza usare il telecomando</span></span>
+        <div class="stepper"><button type="button" aria-label="Meno minuti">&minus;</button><output>5</output><button type="button" aria-label="Più minuti">+</button></div>
+      </div>
+    </div>
+    <button class="btn btn-secondary" type="button">Riavvia dall'inizio</button>
+  </section>
+
+  <section class="stack">
+    <h2 class="section-title">Stato vuoto</h2>
+    <div class="empty">
+      <svg viewBox="0 0 24 24"><path d="M12 2l2.9 6.9 7.1.6-5.4 4.7 1.7 7.3L12 17.8 5.7 21.5l1.7-7.3L2 9.5l7.1-.6z"/></svg>
+      <h3>Nessun video</h3>
+      <p>Tocca "Carica video o foto" per aggiungere il primo contenuto.</p>
+    </div>
+  </section>
+
+  <section class="stack">
+    <h2 class="section-title">Messaggi</h2>
+    <div class="toast toast-error" role="alert">Caricamento non riuscito. Controlla il Wi-Fi e riprova.</div>
+  </section>
+</main>
+
+<div class="toast-zone"><div class="toast toast-ok" role="status">Caricato: Orari corsi settembre</div></div>
+
+<div class="scrim" id="dlg"><div class="dialog" role="alertdialog" aria-labelledby="dt">
+  <h2 id="dt">Eliminare questo video?</h2>
+  <p>"Offerta estate 2025 (vecchia)" sparirà dal monitor e libererà 412 MB. Non si può annullare.</p>
+  <div class="dialog-actions">
+    <button class="btn btn-quiet" type="button" onclick="document.getElementById('dlg').hidden=true">Annulla</button>
+    <button class="btn btn-danger" type="button" onclick="document.getElementById('dlg').hidden=true">Elimina</button>
+  </div>
+</div></div>
+</body></html>

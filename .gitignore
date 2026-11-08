@@ -1,0 +1,14 @@
+.DS_Store
+.idea/
+.gradle/
+build/
+local.properties
+__pycache__/
+*.apk
+
+# Local leftovers from the Kodi setup, not part of the project.
+apk/
+service.kiosk.loop/
+Addons33.backup.db
+packages-*.txt
+screen-after-reboot.png

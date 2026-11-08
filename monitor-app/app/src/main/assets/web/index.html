@@ -1,0 +1,562 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<meta name="apple-mobile-web-app-title" content="TV Palestra">
+<meta name="theme-color" content="#0B0B0B">
+<link rel="apple-touch-icon" href="/icon.jpg">
+<link rel="stylesheet" href="/tokens.css">
+<title>TV Palestra</title>
+<style>
+.upload-note { margin: 8px 0 0; color: var(--kg-text-muted); font-size: 14px; }
+  .brand { display: flex; align-items: center; gap: var(--sp-3); }
+  .brand img { width: 64px; height: 64px; border-radius: var(--radius); flex: none; }
+  .media-item .media-body { cursor: pointer; }
+  .thumb { overflow: hidden; }
+  .thumb img { width: 100%; height: 100%; object-fit: cover; }
+  /* Long dialogs scroll inside the scrim; margin-top:auto keeps them at the bottom when short and lets the top stay reachable when tall. */
+  .scrim { display: flex; flex-direction: column; align-items: center; overflow-y: auto; padding-top: calc(var(--sp-4) + env(safe-area-inset-top, 0px)); }
+  .dialog { margin-top: auto; flex: none; }
+  .preview { width: 100%; max-height: 40vh; border-radius: var(--radius-sm); background: #000; object-fit: contain; }
+  .field { display: flex; flex-direction: column; gap: var(--sp-1); }
+  .field span { font-size: var(--fs-xs); color: var(--kg-text-muted); }
+  .field input { min-height: var(--touch); padding: 0 var(--sp-3); border-radius: var(--radius-sm); border: var(--border); background: var(--kg-surface-2); font-size: 1rem; }
+  .pending { display: flex; gap: var(--sp-3); align-items: center; }
+  .pending .thumb { width: 72px; height: 54px; }
+  .pending .field { flex: 1; min-width: 0; }
+  a.btn { text-decoration: none; }
+  .dialog-head { display: flex; align-items: center; justify-content: space-between; margin: calc(-1 * var(--sp-2)) calc(-1 * var(--sp-3)) 0 0; }
+  .dialog-head .icon-btn { color: var(--kg-white); }
+  .help-btn { margin-left: auto; border: 2px solid var(--kg-gold); border-radius: 50%; color: var(--kg-gold); font: var(--fw-black) var(--fs-lg)/1 var(--font-display); }
+  .help-steps { margin: 0; padding-left: 1.4em; display: flex; flex-direction: column; gap: var(--sp-2); }
+  .help-steps li::marker { color: var(--kg-gold); font-weight: var(--fw-black); }
+  .help-sub { margin: var(--sp-2) 0 0; font: var(--fw-black) var(--fs-sm)/1.2 var(--font-display); text-transform: uppercase; color: var(--kg-gold); }
+  [hidden] { display: none !important; }
+
+  /* Computer screens: settings on the left, the playlist on the right, dialogs centred. */
+  @media (min-width: 900px) {
+    .app { max-width: 1120px; display: grid; grid-template-columns: 380px minmax(0, 1fr); column-gap: var(--sp-6); align-items: start; }
+    .app > .header, .app > section:nth-of-type(1), .app > section:nth-of-type(3) { grid-column: 1; }
+    .app > section:nth-of-type(2) { grid-column: 2; grid-row: 1 / span 3; }
+    .dialog { margin-bottom: auto; max-width: 520px; }
+    .handle { cursor: grab; }
+  }
+</style>
+</head>
+<body>
+<main class="app">
+  <header class="header">
+    <div class="brand">
+      <img src="/logo.jpg" alt="Keep Gold">
+      <h1 class="title"><small>Keep Gold</small>TV Palestra</h1>
+      <button class="icon-btn help-btn" type="button" id="help-open" aria-label="Come collegarti alla TV">?</button>
+    </div>
+    <div class="meter" id="meter">
+      <div class="meter-label" id="space">Collegamento alla TV…</div>
+      <div class="meter-bar" role="progressbar" aria-label="Spazio usato"><div class="meter-fill"></div></div>
+    </div>
+  </header>
+
+  <section class="stack">
+    <input id="file" type="file" accept="video/*,image/*" multiple hidden>
+    <button class="btn btn-primary" type="button" id="pick">Carica video o foto</button>
+    <div class="upload" id="upload" hidden>
+      <div class="upload-head"><span class="upload-name" id="upname"></span><span id="uppct">0%</span></div>
+      <div class="upload-bar"><div class="upload-fill" id="upfill"></div></div>
+      <p class="upload-note">Tieni lo schermo acceso e questa pagina aperta finché non ha finito.</p>
+    </div>
+  </section>
+
+  <section class="stack">
+    <h2 class="section-title">Cosa va sulla TV</h2>
+    <ul class="media-list" id="list"></ul>
+    <div class="empty" id="empty" hidden>
+      <svg viewBox="0 0 24 24"><path d="M12 2l2.9 6.9 7.1.6-5.4 4.7 1.7 7.3L12 17.8 5.7 21.5l1.7-7.3L2 9.5l7.1-.6z"/></svg>
+      <h3>Nessun contenuto</h3>
+      <p>Tocca "Carica video o foto" per aggiungere il primo.</p>
+    </div>
+  </section>
+
+  <section class="stack">
+    <h2 class="section-title">Impostazioni</h2>
+    <div class="settings">
+      <div class="row">
+        <span class="row-text">Riparti da solo quando torna la corrente</span>
+        <label class="switch"><input type="checkbox" role="switch" id="autostart" aria-label="Riparti da solo quando torna la corrente"><span class="track"></span></label>
+      </div>
+      <div class="row">
+        <span class="row-text">Torna ai video dopo<span class="row-hint">minuti, se qualcuno esce col telecomando</span></span>
+        <div class="stepper" data-key="return_minutes" data-steps="1,2,5,10,15,30,45,60,90,120,180,240"><button type="button" aria-label="Meno">&minus;</button><output></output><button type="button" aria-label="Più">+</button></div>
+      </div>
+      <div class="row">
+        <span class="row-text">Durata di ogni foto<span class="row-hint">secondi, con zoom e dissolvenza</span></span>
+        <div class="stepper" data-key="image_seconds" data-steps="3,4,5,6,8,10,12,15,20,30,45,60"><button type="button" aria-label="Meno">&minus;</button><output></output><button type="button" aria-label="Più">+</button></div>
+      </div>
+    </div>
+    <button class="btn btn-secondary" type="button" id="restart">Riavvia dall'inizio</button>
+  </section>
+</main>
+
+<div class="toast-zone" id="toasts"></div>
+
+<div class="scrim" id="names" hidden><div class="dialog" role="dialog" aria-labelledby="names-t">
+  <h2 id="names-t">Dai un nome</h2>
+  <p>Scrivi cosa sono, così tra un mese sai ancora cosa c'è sulla TV.</p>
+  <div class="stack" id="pending"></div>
+  <div class="dialog-actions">
+    <button class="btn btn-quiet" type="button" id="names-cancel">Annulla</button>
+    <button class="btn btn-primary" type="button" id="names-send">Invia alla TV</button>
+  </div>
+</div></div>
+
+<div class="scrim" id="help" hidden><div class="dialog" role="dialog" aria-labelledby="help-t">
+  <div class="dialog-head">
+    <h2 id="help-t">Come collegarti alla TV</h2>
+    <button class="icon-btn" type="button" id="help-close" aria-label="Chiudi"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+  </div>
+  <ol class="help-steps">
+    <li>Collega il telefono alla wifi palestra.</li>
+    <li>Aspetta un minuto. Quando la TV si collega, sullo schermo compare per qualche secondo la scritta gialla "COLLEGATO".</li>
+    <li>Apri l'icona "TV Palestra" sulla schermata Home.</li>
+    <li>Da qui carichi, metti in ordine, accendi o spegni i contenuti.</li>
+    <li>Quando hai finito chiudi pure la pagina: la TV va avanti da sola.</li>
+  </ol>
+  <p>Mentre carichi, tieni la pagina aperta e lo schermo acceso. I video girati in verticale vanno sistemati per la TV, e ci vuole il tempo che dura il video.</p>
+  <h3 class="help-sub">Se la TV non è sulla wifi</h3>
+  <ol class="help-steps">
+    <li>Prendi il telecomando e premi il tasto con la casetta.</li>
+    <li>Con la freccia destra vai fino in fondo alla riga, sull'ingranaggio.</li>
+    <li>Premi la freccia giù, spostati su "Rete" e premi il tasto centrale.</li>
+    <li>Scegli la wifi palestra e, se te la chiede, scrivi la password.</li>
+    <li>Quando è collegata premi di nuovo la casetta. I video tornano da soli dopo i minuti scelti in Impostazioni.</li>
+  </ol>
+  <h3 class="help-sub">Se compare "TV non raggiungibile"</h3>
+  <ul class="help-steps">
+    <li>Controlla che la TV sia accesa e che il telefono sia sulla wifi palestra.</li>
+    <li>Aspetta un minuto e ricarica la pagina.</li>
+    <li>Se usi Chrome, vai in Impostazioni dell'iPhone, poi Chrome, e attiva "Rete locale".</li>
+  </ul>
+  <p>Se sulla TV vedi la schermata Amazon, lasciala stare: torna da solo ai video dopo i minuti scelti in Impostazioni. Per farlo subito tocca "Riavvia dall'inizio".</p>
+</div></div>
+
+<div class="scrim" id="item" hidden><div class="dialog" role="dialog" aria-labelledby="item-t">
+  <div class="dialog-head">
+    <h2 id="item-t"></h2>
+    <button class="icon-btn" type="button" id="item-close" aria-label="Chiudi"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+  </div>
+  <div id="item-preview"></div>
+  <label class="field"><span>Nome</span><input id="item-name" autocomplete="off" enterkeyhint="done"></label>
+  <div class="dialog-actions">
+    <button class="btn btn-danger" type="button" id="item-delete">Elimina</button>
+    <a class="btn btn-quiet" id="item-download">Scarica sul telefono</a>
+    <button class="btn btn-primary" type="button" id="item-save">Salva nome</button>
+  </div>
+</div></div>
+
+<div class="scrim" id="confirm" hidden><div class="dialog" role="alertdialog" aria-labelledby="confirm-t">
+  <h2 id="confirm-t">Eliminare?</h2>
+  <p id="confirm-p"></p>
+  <div class="dialog-actions">
+    <button class="btn btn-quiet" type="button" id="confirm-no">Annulla</button>
+    <button class="btn btn-danger" type="button" id="confirm-yes">Elimina</button>
+  </div>
+</div></div>
+
+<script>
+const $ = id => document.getElementById(id);
+const fmt = n => n >= 1e9 ? (n / 1073741824).toFixed(1).replace('.', ',') + ' GB' : Math.max(1, Math.round(n / 1048576)) + ' MB';
+const base = name => name.replace(/\.[^.]+$/, '');
+const media = name => '/media/' + encodeURIComponent(name);
+const isImage = file => file.type.startsWith('image/');
+let current = { media: [] };
+let busy = false;
+
+function toast(text, ok = true) {
+  const t = document.createElement('div');
+  t.className = 'toast ' + (ok ? 'toast-ok' : 'toast-error');
+  t.setAttribute('role', ok ? 'status' : 'alert');
+  t.textContent = text;
+  $('toasts').appendChild(t);
+  setTimeout(() => t.remove(), ok ? 3000 : 6000);
+}
+
+async function post(url, data) {
+  try {
+    const r = await fetch(url, { method: 'POST', body: JSON.stringify(data) });
+    const j = await r.json();
+    if (!r.ok) throw new Error(j.error || 'errore');
+    return true;
+  } catch (e) {
+    toast((e.message === 'Load failed' || e.message === 'Failed to fetch') ? 'TV non raggiungibile. Controlla la wifi palestra e riprova.' : e.message, false);
+    return false;
+  } finally {
+    load();
+  }
+}
+
+function thumb(m) {
+  const t = document.createElement('div');
+  t.className = 'thumb';
+  if (m.image) {
+    const img = document.createElement('img');
+    img.src = media(m.name);
+    img.alt = '';
+    img.loading = 'lazy';
+    t.appendChild(img);
+  } else {
+    t.textContent = 'VIDEO';
+  }
+  return t;
+}
+
+async function load() {
+  if (busy) return;
+  try {
+    current = await (await fetch('/api/state')).json();
+  } catch (e) {
+    $('space').textContent = 'TV non raggiungibile: sei sulla wifi palestra?';
+    return;
+  }
+  const used = 100 - current.free / current.total * 100;
+  $('meter').style.setProperty('--used', used + '%');
+  $('meter').classList.toggle('is-low', current.free < 500 * 1048576);
+  $('space').innerHTML = '<b>' + fmt(current.free) + ' liberi</b> su ' + fmt(current.total);
+  $('autostart').checked = current.autostart;
+  document.querySelectorAll('.stepper').forEach(s => s.querySelector('output').textContent = current[s.dataset.key]);
+  $('empty').hidden = current.media.length > 0;
+  const list = $('list');
+  list.textContent = '';
+  for (const m of current.media) {
+    const li = document.createElement('li');
+    li.className = 'media-item' + (m.enabled ? '' : ' is-off');
+    li.dataset.name = m.name;
+    li.innerHTML = '<button class="handle" type="button" aria-label="Trascina per cambiare ordine"><svg viewBox="0 0 24 24"><circle cx="9" cy="6" r="1.8"/><circle cx="15" cy="6" r="1.8"/><circle cx="9" cy="12" r="1.8"/><circle cx="15" cy="12" r="1.8"/><circle cx="9" cy="18" r="1.8"/><circle cx="15" cy="18" r="1.8"/></svg></button>'
+      + '<div class="media-body"><span class="media-name"></span><span class="media-meta"></span></div>'
+      + '<div class="media-actions"><label class="switch"><input type="checkbox" role="switch"><span class="track"></span></label></div>';
+    li.insertBefore(thumb(m), li.querySelector('.media-body'));
+    li.querySelector('.media-name').textContent = base(m.name);
+    li.querySelector('.media-meta').textContent = (m.enabled ? '' : 'Spento, non viene mostrato · ') + (m.image ? 'Foto · ' : 'Video · ') + fmt(m.size);
+    const box = li.querySelector('input');
+    box.checked = m.enabled;
+    box.setAttribute('aria-label', 'In riproduzione: ' + base(m.name));
+    box.onchange = () => post('/api/toggle', { name: m.name, enabled: box.checked });
+    li.querySelector('.media-body').onclick = () => openItem(m);
+    dragHandle(li.querySelector('.handle'), li);
+    list.appendChild(li);
+  }
+}
+
+// Drag and drop with pointer events, because iOS Safari has no HTML5 drag on touch.
+// The row only slides with a transform while dragging: moving it in the DOM mid-gesture makes iOS cancel the touch.
+function dragHandle(handle, li) {
+  handle.onpointerdown = e => {
+    e.preventDefault();
+    busy = true;
+    const startY = e.clientY;
+    li.classList.add('is-dragging');
+    li.style.position = 'relative';
+    li.style.zIndex = 5;
+    const move = ev => li.style.transform = 'translateY(' + (ev.clientY - startY) + 'px)';
+    const end = ev => {
+      removeEventListener('pointermove', move);
+      removeEventListener('pointerup', end);
+      removeEventListener('pointercancel', end);
+      const list = $('list');
+      const r = li.getBoundingClientRect();
+      const mid = r.top + r.height / 2;
+      li.style.transform = li.style.position = li.style.zIndex = '';
+      li.classList.remove('is-dragging');
+      const others = [...list.children].filter(x => x !== li);
+      const before = others.find(x => {
+        const o = x.getBoundingClientRect();
+        return mid < o.top + o.height / 2;
+      });
+      list.insertBefore(li, before || null);
+      busy = false;
+      const names = [...list.children].map(x => x.dataset.name);
+      if (names.join('/') !== current.media.map(m => m.name).join('/')) post('/api/order', { names });
+    };
+    addEventListener('pointermove', move);
+    addEventListener('pointerup', end);
+    addEventListener('pointercancel', end);
+  };
+}
+
+function openItem(m) {
+  $('item-t').textContent = m.image ? 'Foto' : 'Video';
+  const p = document.createElement(m.image ? 'img' : 'video');
+  p.className = 'preview';
+  p.src = media(m.name);
+  if (!m.image) { p.controls = true; p.playsInline = true; p.preload = 'metadata'; }
+  $('item-preview').replaceChildren(p);
+  $('item-name').value = base(m.name);
+  $('item-download').href = media(m.name) + '?download';
+  $('item-download').setAttribute('download', m.name);
+  $('item-save').onclick = async () => {
+    const name = $('item-name').value.trim();
+    if (name && name !== base(m.name) && await post('/api/rename', { name: m.name, new: name })) toast('Nome salvato');
+    closeItem();
+  };
+  $('item-delete').onclick = () => {
+    closeItem();
+    $('confirm-p').textContent = '"' + base(m.name) + '" sparirà dalla TV e libererà ' + fmt(m.size) + '. Non si può annullare.';
+    $('confirm').hidden = false;
+    $('confirm-yes').onclick = async () => {
+      $('confirm').hidden = true;
+      if (await post('/api/delete', { name: m.name })) toast('Eliminato');
+    };
+  };
+  $('item').hidden = false;
+}
+
+function closeItem() {
+  $('item').hidden = true;
+  $('item-preview').replaceChildren();
+}
+
+$('item-close').onclick = closeItem;
+$('help-open').onclick = () => $('help').hidden = false;
+$('help-close').onclick = () => $('help').hidden = true;
+$('help').onclick = e => e.target === $('help') && ($('help').hidden = true);
+$('item').onclick = e => e.target === $('item') && closeItem();
+$('confirm-no').onclick = () => $('confirm').hidden = true;
+
+// Photos become a 1920px JPEG: smaller uploads, and iPhone HEIC photos become a format the TV can show.
+function toJpeg(file) {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => {
+      const scale = Math.min(1, 1920 / Math.max(img.naturalWidth, img.naturalHeight));
+      const c = document.createElement('canvas');
+      c.width = Math.round(img.naturalWidth * scale);
+      c.height = Math.round(img.naturalHeight * scale);
+      c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+      URL.revokeObjectURL(img.src);
+      c.toBlob(b => b ? resolve(b) : reject(new Error('foto non leggibile')), 'image/jpeg', 0.88);
+    };
+    img.onerror = () => reject(new Error('foto non leggibile'));
+    img.src = URL.createObjectURL(file);
+  });
+}
+
+// The Fire TV hardware decoder stops at 1920x1088 and 8-bit, so portrait, 4K and iPhone HDR videos stutter.
+// The browser cannot tell the codec, so every video is re-recorded as 1080p H.264 on a black frame.
+let audioCtx;
+
+function fitVideo(file, onProgress) {
+  return new Promise((resolve, reject) => {
+    const v = document.createElement('video');
+    v.playsInline = true;
+    v.preload = 'auto';
+    v.src = URL.createObjectURL(file);
+    v.onerror = () => reject(new Error('video non leggibile'));
+    v.onloadedmetadata = async () => {
+      try {
+      const mime = ['video/mp4;codecs=avc1,mp4a', 'video/mp4'].find(m => window.MediaRecorder && MediaRecorder.isTypeSupported(m));
+      if (!mime) {
+        URL.revokeObjectURL(v.src);
+        resolve(file);
+        return;
+      }
+      const c = document.createElement('canvas');
+      c.width = 1920;
+      c.height = 1080;
+      const ctx = c.getContext('2d');
+      const scale = Math.min(1920 / v.videoWidth, 1080 / v.videoHeight);
+      const w = v.videoWidth * scale, h = v.videoHeight * scale;
+      const stream = c.captureStream(30);
+      const src = audioCtx.createMediaElementSource(v);
+      const dest = audioCtx.createMediaStreamDestination();
+      src.connect(dest);
+      dest.stream.getAudioTracks().forEach(t => stream.addTrack(t));
+      const rec = new MediaRecorder(stream, { mimeType: mime, videoBitsPerSecond: 8000000 });
+      const chunks = [];
+      rec.ondataavailable = e => e.data.size && chunks.push(e.data);
+      rec.onstop = () => {
+        URL.revokeObjectURL(v.src);
+        resolve(new Blob(chunks, { type: 'video/mp4' }));
+      };
+      const draw = () => {
+        ctx.fillStyle = '#000';
+        ctx.fillRect(0, 0, 1920, 1080);
+        ctx.drawImage(v, (1920 - w) / 2, (1080 - h) / 2, w, h);
+        onProgress(v.currentTime / v.duration);
+        if (!v.ended) requestAnimationFrame(draw);
+      };
+      v.onended = () => setTimeout(() => rec.stop(), 200);
+      try {
+        await v.play();
+      } catch (e) {
+        // iOS can refuse sound once the tap that started the upload is too old: keep the video without audio.
+        v.muted = true;
+        await v.play();
+      }
+
+      // Record only once a real frame is on the canvas, otherwise the file starts with a second of black and the TV fades into black.
+      await new Promise(r => v.requestVideoFrameCallback ? v.requestVideoFrameCallback(() => r()) : r());
+      draw();
+      rec.start(1000);
+      } catch (e) {
+        // Any failure must end the upload with a message instead of a bar stuck at 0%.
+        URL.revokeObjectURL(v.src);
+        reject(new Error('video non convertibile'));
+      }
+    };
+  });
+}
+
+function send(body, name) {
+  return new Promise(done => {
+    const xhr = new XMLHttpRequest();
+    xhr.open('POST', '/api/upload?name=' + encodeURIComponent(name));
+    xhr.upload.onprogress = e => {
+      const pct = Math.round(e.loaded / e.total * 100) + '%';
+      $('upfill').style.setProperty('--pct', pct);
+      $('uppct').textContent = pct;
+    };
+    xhr.onload = () => {
+      let err = '';
+      try { err = JSON.parse(xhr.responseText).error || ''; } catch (e) {}
+      done(xhr.status === 200 ? '' : (err || 'errore'));
+    };
+    xhr.onerror = () => done('connessione persa, controlla la wifi palestra');
+    xhr.send(body);
+  });
+}
+
+$('pick').onclick = () => $('file').click();
+
+$('file').onchange = () => {
+  const files = [...$('file').files];
+  $('file').value = '';
+  if (!files.length) return;
+  const box = $('pending');
+  box.textContent = '';
+  for (const f of files) {
+    const row = document.createElement('div');
+    row.className = 'pending';
+    const t = document.createElement('div');
+    t.className = 'thumb';
+    if (isImage(f)) {
+      const img = document.createElement('img');
+      img.src = URL.createObjectURL(f);
+      t.appendChild(img);
+    } else {
+      t.textContent = 'VIDEO';
+    }
+    const label = document.createElement('label');
+    label.className = 'field';
+    label.innerHTML = '<span></span><input autocomplete="off" enterkeyhint="next" placeholder="Es. Promo corsi gennaio">';
+    label.querySelector('span').textContent = (isImage(f) ? 'Foto' : 'Video') + ' · ' + fmt(f.size);
+    const input = label.querySelector('input');
+
+    // Camera names like IMG_2040 mean nothing later: leave the field empty so a real name gets typed.
+    input.value = /^(IMG|VID|DSC|PXL|MOV)[_-]?\d+/i.test(f.name) ? '' : base(f.name);
+    row.file = f;
+    row.append(t, label);
+    box.appendChild(row);
+  }
+  $('names').hidden = false;
+  box.querySelector('input').focus();
+};
+
+$('names-cancel').onclick = () => $('names').hidden = true;
+
+$('names-send').onclick = async () => {
+  const rows = [...$('pending').children];
+  const empty = rows.find(r => !r.querySelector('input').value.trim());
+  if (empty) {
+    empty.querySelector('input').focus();
+    toast('Scrivi un nome per ogni contenuto', false);
+    return;
+  }
+
+  // The TV refuses a name it already has, so catch it here before minutes of conversion.
+  const clean = r => r.querySelector('input').value.trim().replace(/[\/\\]/g, '-').replace(/^\.+/, '');
+  const taken = current.media.map(m => base(m.name).toLowerCase());
+  const dup = rows.find((r, i) => taken.includes(clean(r).toLowerCase())
+    || rows.findIndex(o => clean(o).toLowerCase() === clean(r).toLowerCase()) !== i);
+  if (dup) {
+    dup.querySelector('input').focus();
+    toast('Questo nome c\'è già: scegline un altro', false);
+    return;
+  }
+  $('names').hidden = true;
+  $('pick').disabled = true;
+  $('upload').hidden = false;
+  const errors = [];
+  let lock = null;
+  try {
+  // Created inside the tap, because iOS only lets audio start from a user gesture.
+  audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)();
+  audioCtx.resume();
+
+  // Keeps the iPhone from locking mid-conversion, where Safari would freeze the recording.
+  try {
+    lock = await navigator.wakeLock?.request('screen');
+  } catch (e) {}
+  for (const r of rows) {
+    const label = clean(r);
+    const f = r.file;
+    $('upname').textContent = label;
+    $('upfill').style.setProperty('--pct', '0%');
+    $('uppct').textContent = '0%';
+    try {
+      const body = isImage(f) ? await toJpeg(f) : await fitVideo(f, p => {
+        $('upfill').style.setProperty('--pct', Math.round(p * 100) + '%');
+        $('uppct').textContent = 'Preparo per la TV ' + Math.round(p * 100) + '%';
+      });
+      if (!body.size) throw new Error('conversione vuota, riprova');
+      const free = (await (await fetch('/api/state')).json()).free;
+      if (body.size + 200 * 1024 * 1024 > free) throw new Error('spazio insufficiente sulla TV');
+      const ext = isImage(f) ? '.jpg' : body === f ? (f.name.match(/\.[^.]+$/) || ['.mp4'])[0].toLowerCase() : '.mp4';
+      const err = await send(body, label + ext);
+      if (err) errors.push(label + ': ' + err);
+    } catch (e) {
+      errors.push(label + ': ' + e.message);
+    }
+  }
+  } catch (e) {
+    errors.push(e.message);
+  } finally {
+    lock?.release().catch(() => {});
+    $('upload').hidden = true;
+    $('pick').disabled = false;
+  }
+  if (errors.length) toast('Non caricato: ' + errors.join(', '), false);
+  else toast(rows.length === 1 ? 'Caricato sulla TV' : rows.length + ' contenuti caricati sulla TV');
+  load();
+};
+
+function saveSettings() {
+  const s = {};
+  document.querySelectorAll('.stepper').forEach(x => s[x.dataset.key] = +x.querySelector('output').textContent);
+  post('/api/settings', Object.assign(s, { autostart: $('autostart').checked }));
+}
+
+$('autostart').onchange = saveSettings;
+
+document.querySelectorAll('.stepper').forEach(s => {
+  const steps = s.dataset.steps.split(',').map(Number);
+  const [minus, plus] = s.querySelectorAll('button');
+  const move = dir => {
+    const v = +s.querySelector('output').textContent;
+    const i = dir > 0 ? steps.findIndex(x => x > v) : steps.findLastIndex(x => x < v);
+    if (i < 0) return;
+    s.querySelector('output').textContent = steps[i];
+    saveSettings();
+  };
+  minus.onclick = () => move(-1);
+  plus.onclick = () => move(1);
+});
+
+$('restart').onclick = async () => { if (await post('/api/restart', {})) toast('Riparto dal primo contenuto'); };
+
+load();
+setInterval(load, 10000);
+</script>
+</body>
+</html>
